@@ -347,5 +347,6 @@ GROUP BY tt.customer_id
 
 Notes:
 * Assumption #01: No points are awarded for orders made **BEFORE** being registered as an member (i.e. order_date < join_date)
+* Assumption #02: sushi **does not** have a 2x multiplier
 * Comment: e.g. Customer B has two orders within the promo period (sushi: $10 and ramen: $12) --> (10+12) * 20 = 440 points
 * Comment: Customer B's last order is omitted as it occurs in feb
