@@ -311,3 +311,41 @@ Notes:
 * e.g. Customer A ordered sushi($10), curry($30) & ramen($36) --> Total Points: 860 (sushi: 200, curry: 300, ramen: 360)
 
 ### 10. In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi - how many points do customer A and B have at the end of January?
+<details>
+  <summary> SQL Query </summary>
+
+```
+WITH total_tbl AS (
+SELECT 
+	s.customer_id,
+    s.order_date,
+    mb.join_date,
+    to_char(mb.join_date + INTERVAL '1 week','YYYY-MM-DD') AS "promo_date",
+    m.price AS "price",
+    CASE
+    	WHEN s.order_date BETWEEN mb.join_date AND mb.join_date + INTERVAL '1 week' THEN 20
+    WHEN s.order_date < mb.join_date THEN 0
+    Else
+    	10
+    END AS "amp"
+FROM dannys_diner.sales AS s
+JOIN dannys_diner.members AS mb
+ON s.customer_id = mb.customer_id
+JOIN dannys_diner.menu as m
+ON s.product_id = m.product_id
+ORDER BY s.customer_id ASC, s.order_date ASC
+)
+
+SELECT 
+	tt.customer_id AS "Customer ID",
+	SUM(tt.price * tt.amp) AS "Total Points"
+FROM total_tbl AS tt
+WHERE EXTRACT(MONTH FROM tt.order_date) = 1
+GROUP BY tt.customer_id
+```
+</details>
+
+Notes:
+* Assumption #01: No points are awarded for orders made **BEFORE** being registered as an member (i.e. order_date < join_date)
+* Comment: e.g. Customer B has two orders within the promo period (sushi: $10 and ramen: $12) --> (10+12) * 20 = 440 points
+* Comment: Customer B's last order is omitted as it occurs in feb
