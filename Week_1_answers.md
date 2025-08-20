@@ -63,11 +63,14 @@ VALUES
   
 </details>
 
-Metadata
-* danny_diner (database)
-* sales (name)
-* menu (name)
-* members (name)
+## Metadata
+### Database Name
+`danny_diner`
+
+### Table Name
+1. `sales`
+2. `menu`
+3. `members`
 
 ### 1. What is the total amount each customer spent at the restaurant?
 <details>
@@ -117,7 +120,7 @@ JOIN dannys_diner.menu AS m
 ON s.product_id = m.product_id) as t
 WHERE t.ranks = 1
 ```
-Comments: This query is not optimised and may encounter latency issues with large databases. Ideally, we will want to filter to the first item **before** joining to the menu table
+Notes: This query is not optimised and may encounter latency issues with large databases. Ideally, we will want to filter to the first item **before** joining to the menu table
   
 </details>
 
@@ -166,7 +169,7 @@ WHERE r.ranks = 1
   
 </details>
 
-Comments: Customer B has tied for all three foods.
+Notes: Customer B has tied for all three foods.
 
 ### 6. Which item was purchased first by the customer after they became a member?
 <details>
@@ -199,9 +202,9 @@ ORDER BY mt.customer_id ASC
   
 </details>
 
-Comments: 
-* Non-members (Customer C) is excluded from the query as Customer C did not join as a member.
-* Membership status is activated on the day it is applied on.
+Notes: 
+* Assumption #01: Non-members (e.g. Customer C) are excluded from the query
+* Assumption #02: Membership status is activated on the day it is applied on.
 
 ### 7. Which item was purchased just before the customer became a member?
 <details>
@@ -222,48 +225,88 @@ WHERE s.order_date < m.join_date
 ORDER BY s.customer_id ASC, s.order_date ASC)
 
 SELECT 
-	*
+	mt.customer_id,
+    mt.order_date,
+    mt.join_date,
+    mt.product_id,
+    mt.row_num,
+    m.product_name
 FROM member_tbl AS mt
 JOIN dannys_diner.menu AS m
 ON mt.product_id = m.product_id
 WHERE mt.row_num = 1
-ORDER BY mt.customer_id ASC
-
-
-
+ORDER BY mt.customer_id ASC, row_num ASC
 ```
-  
 </details>
+
+Notes:
+* Assumption #01: we're only interested in customers who are eventually converted into members (e.g. Customer A & Customer B, excl. Customer C)
+* Assumption #02: when items are tied (in terms of ranking), we will take the first item based Product ID
+* Comment #01: If we want to display items that are tied for the first place, use `dense_rank()` instead of `row_number()` 
 
 ### 8. What is the total items and amount spent for each member before they became a member?
 <details>
   <summary> SQL Query </summary>
 
 ```
-SELECT
-FROM
-WHERE
-JOIN
-ON
+WITH member_tbl AS (
+SELECT 
+	s.customer_id, 
+    s.order_date,
+    m.join_date,
+    s.product_id
+FROM dannys_diner.sales AS s
+LEFT JOIN dannys_diner.members AS m
+ON s.customer_id = m.customer_id
+WHERE s.order_date < m.join_date
+ORDER BY s.customer_id ASC, s.order_date ASC)
 
-
+SELECT 
+	mt.customer_id,
+    COUNT(mt.product_id) AS "No. of Items",
+    SUM(m.price) AS "Total Price"
+FROM member_tbl AS mt
+JOIN dannys_diner.menu AS m
+ON mt.product_id = m.product_id
+GROUP BY mt.customer_id
+ORDER BY mt.customer_id ASC
 ```
   
 </details>
+
 ### 9.  If each $1 spent equates to 10 points and sushi has a 2x points multiplier - how many points would each customer have?
 <details>
   <summary> SQL Query </summary>
 
 ```
-SELECT
-FROM
-WHERE
-JOIN
-ON
+WITH total_tbl AS (
+SELECT 
+	s.customer_id,
+    m.product_id,
+    m.product_name,
+    COUNT(m.product_name) AS "Items",
+    SUM(m.price) AS "total",
+    CASE
+    	WHEN m.product_id = 1 THEN 20
+    ELSE
+    	10
+    END AS "amp"  	
+FROM dannys_diner.sales AS s
+JOIN dannys_diner.menu AS m
+ON s.product_id = m.product_id
+GROUP BY s.customer_id, m.product_id, m.product_name
+ORDER BY s.customer_id ASC
+)
 
-
+SELECT 
+	tt.customer_id AS "Customer ID",
+	SUM(tt.total * tt.amp) AS "Total Points"
+FROM total_tbl AS tt
+GROUP BY tt.customer_id
 ```
-  
 </details>
+
+Notes:
+* e.g. Customer C --> $36 of ramen  = 360 points
 
 ### 10. In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi - how many points do customer A and B have at the end of January?
