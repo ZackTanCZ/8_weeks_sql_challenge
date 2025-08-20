@@ -308,6 +308,6 @@ GROUP BY tt.customer_id
 </details>
 
 Notes:
-* e.g. Customer C --> $36 of ramen  = 360 points
+* e.g. Customer A ordered sushi($10), Curry($30) & Ramen($36) --> Total Points: 860 (sushi:200, curry: 300, ramen:360)
 
 ### 10. In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi - how many points do customer A and B have at the end of January?
