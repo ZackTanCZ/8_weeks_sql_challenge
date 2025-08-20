@@ -72,6 +72,7 @@ VALUES
 2. `menu`
 3. `members`
 
+## SQL Questions #1 - #10
 ### 1. What is the total amount each customer spent at the restaurant?
 <details>
   <summary> SQL Query </summary>
