@@ -317,14 +317,16 @@ Notes:
 ```
 WITH total_tbl AS (
 SELECT 
+	EXTRACT(MONTH FROM s.order_date),
 	s.customer_id,
     s.order_date,
     mb.join_date,
     to_char(mb.join_date + INTERVAL '1 week','YYYY-MM-DD') AS "promo_date",
     m.price AS "price",
     CASE
+    	WHEN s.order_date < mb.join_date THEN 0
     	WHEN s.order_date BETWEEN mb.join_date AND mb.join_date + INTERVAL '1 week' THEN 20
-    WHEN s.order_date < mb.join_date THEN 0
+ 		WHEN s.product_id = 1 THEN 20
     Else
     	10
     END AS "amp"
@@ -333,6 +335,7 @@ JOIN dannys_diner.members AS mb
 ON s.customer_id = mb.customer_id
 JOIN dannys_diner.menu as m
 ON s.product_id = m.product_id
+WHERE EXTRACT(MONTH FROM s.order_date) = 1
 ORDER BY s.customer_id ASC, s.order_date ASC
 )
 
@@ -340,13 +343,13 @@ SELECT
 	tt.customer_id AS "Customer ID",
 	SUM(tt.price * tt.amp) AS "Total Points"
 FROM total_tbl AS tt
-WHERE EXTRACT(MONTH FROM tt.order_date) = 1
 GROUP BY tt.customer_id
 ```
 </details>
 
 Notes:
-* Assumption #01: No points are awarded for orders made **BEFORE** being registered as an member (i.e. order_date < join_date)
-* Assumption #02: sushi **does not** have a 2x multiplier
+* Assumption #01: points are **NOT** retroactively awarded. (i.e. orders made **BEFORE** being registered as an member (order_date < join_date) are not awarded points)
+* Assumption #02: Double points for sushi still applies (from Q9)
+* Assumption #03: Point bonuses do not stack (sushi orders do not get 4 times point bonus during promo period)
 * Comment: e.g. Customer B has two orders within the promo period (sushi: $10 and ramen: $12) --> (10+12) * 20 = 440 points
 * Comment: Customer B's last order is omitted as it occurs in feb
