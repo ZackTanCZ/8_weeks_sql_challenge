@@ -353,3 +353,53 @@ Notes:
 * Assumption #03: Point bonuses do not stack (sushi orders do not get 4 times point bonus during promo period)
 * Comment: e.g. Customer B has two orders within the promo period (sushi: $10 and ramen: $12) --> (10+12) * 20 = 440 points
 * Comment: Customer B's last order is omitted as it occurs in feb
+
+## Bonus SQL Question
+
+### Bonus Question 01
+<details>
+  <summary> SQL Query </summary>
+	
+```
+SELECT 
+	s.customer_id,
+    s.order_date,
+    m.product_name,
+    m.price,
+    CASE
+    	WHEN s.order_date < mb.join_date THEN 'N'
+        ELSE
+        	'Y'
+        END AS "member"
+FROM dannys_diner.sales AS s
+JOIN dannys_diner.members AS mb
+ON s.customer_id = mb.customer_id
+JOIN dannys_diner.menu AS m
+ON s.product_id = m.product_id
+ORDER BY s.customer_id ASC, s.order_date ASC, m.product_name ASC
+```
+</details>
+
+### Bonus Question 02
+<details>
+  <summary> SQL Query </summary>
+	
+```
+SELECT 
+	s.customer_id,
+    s.order_date,
+    m.product_name,
+    m.price,
+    CASE
+    	WHEN s.order_date < mb.join_date THEN 'N'
+        ELSE
+        	'Y'
+        END AS "member"
+FROM dannys_diner.sales AS s
+JOIN dannys_diner.members AS mb
+ON s.customer_id = mb.customer_id
+JOIN dannys_diner.menu AS m
+ON s.product_id = m.product_id
+ORDER BY s.customer_id ASC, s.order_date ASC, m.product_name ASC
+```
+</details>
